@@ -1,25 +1,18 @@
-const express = require('express');
+const express = require("express");
 const app = express();
 app.use(express.json());
 
-// Просто для проверки, что сервис жив
-app.get('/ping', (_, res) => res.send('pong'));
+let logs = [];
 
-// Сюда можно отправлять логи
-app.post('/logs', (req, res) => {
-  const { message } = req.body;
-  if (!message) {
-    return res.status(400).json({ error: 'Missing message field' });
-  }
-
-  console.log('LOG:', message);
-  res.status(200).json({ status: 'logged' });
+app.post("/logs", (req, res) => {
+  logs.push({ time: new Date().toISOString(), ...req.body });
+  res.json({ status: "logged" });
 });
 
-// Healthcheck
-app.get('/health', (_, res) => res.json({ status: 'ok' }));
+app.get("/logs", (_, res) => res.json(logs));
+app.get("/ping", (_, res) => res.send("pong"));
+app.get("/health", (_, res) => res.json({ status: "ok" }));
+app.get("/metrics", (_, res) => res.json({ logs: logs.length }));
 
-const PORT = process.env.PORT || 3004;
-app.listen(PORT, () => {
-  console.log(`Logging service running on port ${PORT}`);
-});
+const PORT = process.env.PORT || 3005;
+app.listen(PORT, () => console.log(`Logging service running on ${PORT}`));
