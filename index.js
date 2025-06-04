@@ -1,4 +1,20 @@
 const express = require("express");
+require('dotenv').config();
+const { MongoClient } = require('mongodb');
+
+const mongoUrl = process.env.MONGO_URL;
+let db;
+
+MongoClient.connect(mongoUrl, { useUnifiedTopology: true })
+  .then(client => {
+    db = client.db(); // или client.db('название_базы_данных')
+    console.log("Connected to MongoDB");
+  })
+  .catch(err => {
+    console.error("Failed to connect to MongoDB", err);
+    process.exit(1);
+  });
+
 const app = express();
 app.use(express.json());
 
