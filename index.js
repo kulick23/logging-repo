@@ -28,7 +28,9 @@ app.post("/logs", (req, res) => {
 app.get("/logs", (_, res) => res.json(logs));
 app.get("/ping", (_, res) => res.send("pong"));
 app.get("/health", (_, res) => res.json({ status: "ok" }));
-app.get("/metrics", (_, res) => res.json({ logs: logs.length }));
-
+app.get("/metrics", async (_, res) => {
+  const count = await db.collection('logs').countDocuments();
+  res.json({ logs: count });
+});
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => console.log(`Logging service running on ${PORT}`));
