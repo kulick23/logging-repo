@@ -1,6 +1,7 @@
 const express = require("express");
 require('dotenv').config();
 const { MongoClient } = require('mongodb');
+const client = require('prom-client');
 
 const mongoUrl = process.env.MONGO_URL;
 let db;
@@ -28,9 +29,19 @@ app.post("/logs", (req, res) => {
 app.get("/logs", (_, res) => res.json(logs));
 app.get("/ping", (_, res) => res.send("pong"));
 app.get("/health", (_, res) => res.json({ status: "ok" }));
+
+client.collectDefaultMetrics();           // сбор дефолтных метрик
+const logsGauge = new client.Gauge({      // метрика число логов
+  name: 'logs_count',
+  help: 'Number of logs in MongoDB'
+});
+
 app.get("/metrics", async (_, res) => {
   const count = await db.collection('logs').countDocuments();
-  res.json({ logs: count });
+  logsGauge.set(count);
+  res.set('Content-Type', client.register.contentType);
+  res.send(await client.register.metrics());
 });
+
 const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => console.log(`Logging service running on ${PORT}`));
